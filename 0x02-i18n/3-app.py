@@ -3,8 +3,9 @@
 This script sets up a basic Flask app with Babel for localization and
 selects the locale from the request.
 """
-from flask import Flask, render_template, request
 from flask_babel import Babel, _
+from flask import Flask, render_template, request
+# from flask_babel import Babel, _
 
 # Set up the Flask app
 app = Flask(__name__)
