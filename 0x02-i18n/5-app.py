@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
-"""5-app"""
-
+"""
+This script sets up a basic Flask app with Babel for localization.
+It also mocks a user login system using a 'login_as' URL parameter.
+"""
 
 from flask import Flask, render_template, request, g
-from flask_babel import Babel, gettext
-import pytz
+from flask_babel import Babel, _
 
-app = Flask(__name__)
-app.config['BABEL_DEFAULT_LOCALE'] = 'en'
-app.config['BABEL_DEFAULT_TIMEZONE'] = 'UTC'
-babel = Babel(app)
-
-
-# Mock user data
+# Mock user database
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
     2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
@@ -20,55 +15,80 @@ users = {
     4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
 }
 
+# Set up the Flask app
+app = Flask(__name__)
 
-def get_user():
-    """Retrieve user information based on login_as parameter."""
-    login_as = request.args.get('login_as')
-    if login_as:
-        user_id = int(login_as)
-        return users.get(user_id)
-    return None
+
+# Config class to set up the app configuration
+class Config:
+    """
+    Configuration class for the Flask app. Defines supported languages and
+    default locale/timezone.
+    """
+    LANGUAGES = ['en', 'fr']
+    BABEL_DEFAULT_LOCALE = 'en'
+    BABEL_DEFAULT_TIMEZONE = 'UTC'
+
+
+# Apply the config to the Flask app
+app.config.from_object(Config)
+
+# Instantiate the Babel object
+babel = Babel(app)
 
 
 @app.before_request
 def before_request():
-    """Store the user in the global object before each request if available."""
-    g.user = get_user()
+    """
+    This function is executed before handling every request. It checks if the
+    'login_as' parameter is present in the request. If so, it fetches the user
+    corresponding to the ID in the 'login_as' parameter and sets the user as a
+    global variable on flask.g.
+    """
+    user_id = request.args.get('login_as')
+    if user_id:
+        user = get_user(user_id)
+        g.user = user
+
+
+def get_user(user_id):
+    """
+    This function returns the user dictionary corresponding to the given
+    user ID. If the user ID is not found, it returns None.
+
+    Args:
+        user_id (str): The ID of the user to retrieve.
+
+    Returns:
+        dict or None: The user dictionary or None if not found.
+    """
+    return users.get(int(user_id))
+
+
+@app.route('/', strict_slashes=False)
+def index():
+    """
+    Renders the index page. Displays a welcome message if
+    the user is logged in.
+    """
+    return render_template('5-index.html')
 
 
 @babel.localeselector
 def get_locale():
-    """Determine the best match for supported languages."""
+    """
+    Selects the locale based on the 'locale' URL parameter or Accept-Language
+    header.
+    """
     locale = request.args.get('locale')
-    if locale in ['en', 'fr']:
+    if locale and locale in app.config['LANGUAGES']:
         return locale
-    if g.user and g.user.get('locale') in ['en', 'fr']:
-        return g.user.get('locale')
-    return request.accept_languages.best_match(['en', 'fr'])
-
-
-@babel.timezoneselector
-def get_timezone():
-    """Determine the appropriate timezone."""
-    timezone = request.args.get('timezone')
-    if timezone:
-        try:
-            return pytz.timezone(timezone).zone
-        except pytz.exceptions.UnknownTimeZoneError:
-            pass
-    if g.user and g.user.get('timezone'):
-        try:
-            return pytz.timezone(g.user.get('timezone')).zone
-        except pytz.exceptions.UnknownTimeZoneError:
-            pass
-    return 'UTC'
-
-
-@app.route('/')
-def index():
-    """Render the home page."""
-    return render_template('5-index.html')
+    return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
 if __name__ == '__main__':
-    app.run()
+    """
+    Run the app, which listens on all IP addresses (0.0.0.0) and port 5000,
+    with debugging enabled.
+    """
+    app.run(host='0.0.0.0', port=5000, debug=True)
