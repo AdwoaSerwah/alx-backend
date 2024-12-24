@@ -37,7 +37,7 @@ def get_locale():
     Determine the best match with the client's preferred language
     based on the request's Accept-Language header.
     """
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
+    return request.args.get('locale', request.accept_languages.best_match(app.config['LANGUAGES']))
 
 if __name__ == '__main__':
     # Run the app
