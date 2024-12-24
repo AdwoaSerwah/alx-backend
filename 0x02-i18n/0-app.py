@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 """
-This module sets up a basic Flask app with a single route.
+This script sets up a basic Flask app with a single route.
 """
-
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
 
-@app.route('/')
-def index() -> str:
+@app.route('/', strict_slashes=False)
+def index():
     """
-    Render the index.html template.
-
-    Returns:
-        str: The rendered template.
+    Render the index page with 'Welcome to ALX' title and
+    'Hello world' header.
     """
     return render_template('0-index.html')
 
 
 if __name__ == '__main__':
-    # Run the Flask app in debug mode
-    app.run(debug=True)
+    # Make the app accessible on all network interfaces, and
+    # allow access with or without a trailing slash
+    app.run(host='0.0.0.0', port=5000, debug=True)
