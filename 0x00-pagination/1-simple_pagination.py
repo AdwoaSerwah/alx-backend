@@ -43,21 +43,28 @@ class Server:
 
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
         """
-        Returns a page of the dataset (list of rows) based on pagination parameters.
+        Returns a page of the dataset (list of rows) based on pagination
+        parameters.
 
         Args:
             page (int): The current page number (1-indexed).
             page_size (int): The number of items per page.
 
         Returns:
-            List[List]: A list of rows corresponding to the page, or an empty list if out of range.
+            List[List]: A list of rows corresponding to the page, or
+            an empty list if out of range.
 
         Raises:
             AssertionError: If page or page_size are not positive integers.
         """
         # Validate inputs
-        assert isinstance(page, int) and page > 0, "page must be a positive integer"
-        assert isinstance(page_size, int) and page_size > 0, "page_size must be a positive integer"
+        # assert isinstance(page, int) and page > 0, "page must be + integer"
+        assert (
+            isinstance(page, int) and page > 0
+        ), "page must be a positive integer"
+        assert (
+            isinstance(page_size, int) and page_size > 0
+        ), "page_size must be a positive integer"
 
         # Determine start and end indexes using index_range
         start_index, end_index = index_range(page, page_size)
