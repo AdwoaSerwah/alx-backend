@@ -1,39 +1,52 @@
 #!/usr/bin/env python3
 """
-Module to create a Flask application with internationalization support.
-
-This module sets up a Flask application that uses Flask-Babel for translation.
-It defines a route for the home page and configures the locale selector.
+This script sets up a basic Flask app with Babel for localization and
+selects the locale from the request.
 """
-
-
 from flask import Flask, render_template, request
-from flask_babel import Babel, gettext
+from flask_babel import Babel, _
 
-
+# Set up the Flask app
 app = Flask(__name__)
+
+
+class Config:
+    """
+    Configuration class for Flask app.
+    Defines available languages and default locale/timezone.
+    """
+    LANGUAGES = ['en', 'fr']
+    BABEL_DEFAULT_LOCALE = 'en'
+    BABEL_DEFAULT_TIMEZONE = 'UTC'
+
+
+# Apply the config to the Flask app
+app.config.from_object(Config)
+
+# Instantiate the Babel object
 babel = Babel(app)
+
+
+@app.route('/', strict_slashes=False)
+def index():
+    """
+    Render the index page with a title and header based on translations.
+    The translations are managed using the `_()` function, which retrieves
+    the appropriate message string for the current locale.
+    """
+    return render_template('3-index.html')
 
 
 @babel.localeselector
 def get_locale():
     """
-    Select the locale based on the user's accept header.
-
-    :return: The best matching locale from the user's accept header.
+    Determine the best match with the client's preferred language
+    or use the 'locale' query parameter if provided.
     """
-    return request.accept_languages.best_match(['en', 'fr'])
-
-
-@app.route('/')
-def index():
-    """
-    Route for the home page.
-
-    :return: The rendered template for the home page.
-    """
-    return render_template('3-index.html')
+    return request.args.get(
+        'locale', request.accept_languages.best_match(app.config['LANGUAGES']))
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run the app
+    app.run(host='0.0.0.0', port=5000, debug=True)
